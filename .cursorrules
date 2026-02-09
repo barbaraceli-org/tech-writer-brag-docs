@@ -1,0 +1,126 @@
+# Tech Writer Brag Docs
+
+Generate a single brag-doc report for technical writers. Follow ALL instructions. Return only the final Markdown report; save to `reports/` and confirm when done.
+
+**Core requirements:**
+- One report per request; structure and length depend on cadence (daily, weekly, monthly, quarter, semester).
+- Use active, outcome-focused language (e.g. "Shipped…", "Unblocked…", "Reduced…"). Evidence-based, no fluff.
+- Link to Jira keys (e.g. EDU-123) and PR numbers (e.g. PR #456) where applicable.
+
+---
+
+## 0. Connection validation (mandatory first step)
+
+Before any data retrieval or report generation:
+
+1. Call `mcp_Atlassian-MCP-Server_getAccessibleAtlassianResources`.
+2. If it fails or errors: STOP. Do not fetch Jira/GitHub or generate a report. Tell the user: "Unable to connect to Jira. Please check your Atlassian MCP connection. See `docs/SETUP.md`."
+3. If it succeeds: continue to section 1.
+
+---
+
+## 1. Inputs and data retrieval
+
+**User provides:** Cadence and period (and optionally extra context not in Jira/GitHub).
+
+**Cadence and date range:**
+- **Daily:** Single day (e.g. "yesterday", "2026-02-09"). Output: 3–5 bullets.
+- **Weekly:** Calendar week (e.g. "last week", "2026-W06"). Output: 5–10 bullets, optional by theme.
+- **Monthly:** Calendar month (e.g. "February 2026", "2026-02"). Output: sections by work area, key metrics.
+- **Quarter:** Q1–Q4 (e.g. "Q1 2026"). Output: accomplishments by area + metrics.
+- **Semester:** H1 (Jan–Jun) or H2 (Jul–Dec) (e.g. "H1 2026"). Same as quarter but broader.
+
+Resolve relative terms ("last week", "this month") to concrete YYYY-MM-DD using the current date when the user asks.
+
+**Jira (Atlassian MCP):**
+- Get Cloud ID: `mcp_Atlassian-MCP-Server_getAccessibleAtlassianResources`.
+- Search: `mcp_Atlassian-MCP-Server_searchJiraIssuesUsingJql`.
+- JQL (adapt YYYY-MM-DD to the period):  
+  `assignee = currentUser() AND NOT (summary ~ "LOC REVIEW" OR summary ~ "LOC") AND NOT issuetype = "Epic" AND (resolutiondate >= "START" AND resolutiondate <= "END" OR (status CHANGED TO "In Progress" DURING ("START", "END") OR status WAS "In Progress" ON "END")) ORDER BY updated DESC`
+- Include both completed (resolutiondate in range) and in-progress (worked on during range). Fields: summary, status, issuetype, priority, created, updated, resolutiondate, labels, components.
+
+**GitHub (if MCP available):**
+- PRs authored: `mcp_github_search_pull_requests` with `author:@me created:START..END`.
+- PRs reviewed: `mcp_github_search_pull_requests` with `reviewed-by:@me created:START..END`.
+- Prefer docs-related files: `*.md`, `**/docs/**`, `README*`, `CONTRIBUTING*`.
+
+**Processing:**
+- Group by work area (components → labels → project/repo). For daily/weekly, grouping is optional.
+- Include any extra activities the user mentioned (presentations, mentoring, process improvements, etc.).
+
+---
+
+## 2. Output: single brag report
+
+**Filename (in `reports/`):**
+- Daily: `brag-daily-YYYY-MM-DD.md`
+- Weekly: `brag-weekly-YYYY-Www.md` (ISO week)
+- Monthly: `brag-monthly-YYYY-MM.md`
+- Quarter: `brag-quarterly-YYYY-Qn.md`
+- Semester: `brag-semester-YYYY-Hn.md` (H1 or H2)
+
+**Structure by cadence:**
+
+**Daily:**
+```markdown
+# Brag doc — YYYY-MM-DD
+
+## Highlights
+- [3–5 bullets: what you did + impact; Jira/PR refs in parentheses]
+## Blockers / notes (optional)
+- [If any]
+```
+
+**Weekly:**
+```markdown
+# Brag doc — Week of YYYY-MM-DD to YYYY-MM-DD
+
+## Highlights
+- [5–10 bullets; group by theme if useful: Documentation, Reviews, Collaboration]
+## Metrics (optional)
+- Issues completed: X | PRs merged: Y | Reviews: Z
+```
+
+**Monthly:**
+```markdown
+# Brag doc — Month YYYY-MM
+
+## Overview
+- Short summary sentence and key metrics (issues completed, PRs, work areas).
+
+## By area (or theme)
+### [Area 1]
+- [Bullets with evidence]
+### [Area 2]
+- [Bullets with evidence]
+## Other wins
+- [Presentations, mentoring, process—from user context or inferred]
+```
+
+**Quarter / Semester:**
+```markdown
+# Brag doc — Qn YYYY (or H1/H2 YYYY)
+
+## Overview
+- Metrics: issues completed, in progress, PRs merged, reviews, work areas.
+
+## Accomplishments by area
+### [Area 1]
+- [Evidence-based bullets with Jira/PR refs]
+### [Area 2]
+- [Same]
+## Highlights and impact
+- [2–4 bullets on biggest impact or focus]
+```
+
+---
+
+## 3. Writing rules
+
+- Tone: Confident, active, outcome-focused. No flattery or filler.
+- One sentence per bullet; 3–10 bullets per section depending on cadence.
+- Always include Jira keys and PR numbers where applicable.
+- Valid Markdown; no placeholders or empty sections.
+- Save the report under `reports/` with the correct filename and tell the user it’s done.
+
+**Priority:** Accurate reflection of work, clarity, and usefulness for 1:1s and status updates.
