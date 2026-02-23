@@ -9,5 +9,9 @@ Thumbs.db
 *.swo
 *~
 
-# Reports (optional: remove if you want to track generated brag docs)
-# reports/*.md
+# Cursor
+.cursor/
+
+# Reports - ignore all generated brag docs
+reports/*
+!reports/.gitkeep

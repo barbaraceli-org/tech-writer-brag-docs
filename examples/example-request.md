@@ -24,6 +24,15 @@ Generate my weekly brag doc for last week.
 Weekly brag doc for the week of Feb 3–9, 2026.
 ```
 
+**Biweekly**
+```
+Generate my biweekly brag doc for the last 2 weeks.
+```
+
+```
+Biweekly brag doc for Feb 9–22, 2026.
+```
+
 **Monthly**
 ```
 Generate my monthly brag doc for February 2026.
